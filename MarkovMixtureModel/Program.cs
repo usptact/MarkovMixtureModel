@@ -17,9 +17,9 @@ namespace MarkovMixtureModel
 
         public static void TestMarkovMixtureModel()
         {
-            Rand.Restart(2018);
+            Rand.Restart(20190);
 
-            int N = 50;
+            int N = 1000;
             int T = 10;
             int K = 3;
 
@@ -33,6 +33,13 @@ namespace MarkovMixtureModel
             for (int i = 0; i < K; i++)
                 trans[i] = CPTTransPriorObs[i].Sample().ToArray();
 
+            Console.WriteLine("TRUE ProbInit:");
+            Console.WriteLine("[{0:0.###}]", string.Join(" ", init));
+
+            Console.WriteLine("TRUE CPTTrans:");
+            for (int i = 0; i < trans.Length; i++)
+                Console.WriteLine("[{0:0.###}]", string.Join(" ", trans[i]));
+
             // generate some data
             int[][] data = GenerateData(init, trans, T, N);
 
@@ -42,8 +49,6 @@ namespace MarkovMixtureModel
             model.ObserveData(data);
             model.InitializeStatesRandomly();
             model.InferPosteriors();
-
-            Console.ReadKey();
         }
 
         public static int[][] GenerateData(double[] init, double[][] trans, int T, int N)
