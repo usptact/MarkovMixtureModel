@@ -36,7 +36,7 @@ namespace MarkovMixtureModel
             Console.WriteLine("TRUE ProbInit:");
             Console.WriteLine("[{0:0.###}]", string.Join(" ", init));
 
-            Console.WriteLine("TRUE CPTTrans:");
+            Console.WriteLine("\nTRUE CPTTrans:");
             for (int i = 0; i < trans.Length; i++)
                 Console.WriteLine("[{0:0.###}]", string.Join(" ", trans[i]));
 

@@ -15,7 +15,6 @@ namespace MarkovMixtureModel
         private Range K;
 
         // model variables
-        private Variable<int> ZeroState;
         private VariableArray<VariableArray<int>, int[][]> States;
 
         // model parameters
@@ -51,9 +50,6 @@ namespace MarkovMixtureModel
             CPTTrans[K] = Variable<Vector>.Random(CPTTransPrior[K]);
             CPTTrans.SetValueRange(K);
 
-            // define primary model variables -- zero state
-            ZeroState = Variable.Discrete(ProbInit).Named("ZeroState");
-
             // define primary model variables -- actual states
             States = Variable.Array(Variable.Array<int>(T), N).Named("States");
 
@@ -62,19 +58,15 @@ namespace MarkovMixtureModel
                 using (var block = Variable.ForEach(T))
                 {
                     var t = block.Index;
-                    var previousState = States[N][t - 1];
 
                     using (Variable.If(t == 0))
-                    {
-                        using (Variable.Switch(ZeroState))
-                            States[N][T].SetTo(Variable.Discrete(CPTTrans[ZeroState]));
-                    }
+                        States[N][T].SetTo(Variable.Discrete(ProbInit));
+
+                    var previousState = States[N][t - 1];
 
                     using (Variable.If(t > 0))
-                    {
-                        using (Variable.Switch(previousState))
-                            States[N][T].SetTo(Variable.Discrete(CPTTrans[previousState]));
-                    }
+                    using (Variable.Switch(previousState))
+                        States[N][T].SetTo(Variable.Discrete(CPTTrans[previousState]));
                 }
             }
 
@@ -94,11 +86,6 @@ namespace MarkovMixtureModel
 
         public void InitializeStatesRandomly()
         {
-            //var ZeroStatesInit = Variable.Array<Discrete>(N);
-            //ZeroStatesInit.ObservedValue = Util.ArrayInit(N.SizeAsInt,
-            //                                              t => Discrete.PointMass(Rand.Int(K.SizeAsInt), K.SizeAsInt));
-            //ZeroStates[N].InitialiseTo(ZeroStatesInit[N]);
-
             var StatesInit = Variable.Array(Variable.Array<Discrete>(T), N);
             StatesInit.ObservedValue = Util.ArrayInit(N.SizeAsInt,
                                                       n => Util.ArrayInit(T.SizeAsInt, t => Discrete.PointMass(Rand.Int(K.SizeAsInt), K.SizeAsInt)));
