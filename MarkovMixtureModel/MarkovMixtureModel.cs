@@ -15,7 +15,7 @@ namespace MarkovMixtureModel
         private Range K;
 
         // model variables
-        private VariableArray<int> ZeroStates;
+        private Variable<int> ZeroState;
         private VariableArray<VariableArray<int>, int[][]> States;
 
         // model parameters
@@ -27,8 +27,8 @@ namespace MarkovMixtureModel
         private VariableArray<Dirichlet> CPTTransPrior;
 
         // posteriors
-        Dirichlet[] CPTTransPosterior;
-        Dirichlet ProbInitPosterior;
+        private Dirichlet[] CPTTransPosterior;
+        private Dirichlet ProbInitPosterior;
 
         private InferenceEngine engine;
 
@@ -52,8 +52,7 @@ namespace MarkovMixtureModel
             CPTTrans.SetValueRange(K);
 
             // define primary model variables -- zero state
-            ZeroStates = Variable.Array<int>(N).Named("ZeroStates");
-            ZeroStates[N] = Variable.Discrete(ProbInit).ForEach(N);
+            ZeroState = Variable.Discrete(ProbInit).Named("ZeroState");
 
             // define primary model variables -- actual states
             States = Variable.Array(Variable.Array<int>(T), N).Named("States");
@@ -67,14 +66,14 @@ namespace MarkovMixtureModel
 
                     using (Variable.If(t == 0))
                     {
-                        using (Variable.Switch(ZeroStates[N]))
-                            States[N][T] = Variable.Discrete(CPTTrans[ZeroStates[N]]);
+                        using (Variable.Switch(ZeroState))
+                            States[N][T].SetTo(Variable.Discrete(CPTTrans[ZeroState]));
                     }
 
                     using (Variable.If(t > 0))
                     {
                         using (Variable.Switch(previousState))
-                            States[N][T] = Variable.Discrete(CPTTrans[previousState]);
+                            States[N][T].SetTo(Variable.Discrete(CPTTrans[previousState]));
                     }
                 }
             }
@@ -95,8 +94,14 @@ namespace MarkovMixtureModel
 
         public void InitializeStatesRandomly()
         {
+            //var ZeroStatesInit = Variable.Array<Discrete>(N);
+            //ZeroStatesInit.ObservedValue = Util.ArrayInit(N.SizeAsInt,
+            //                                              t => Discrete.PointMass(Rand.Int(K.SizeAsInt), K.SizeAsInt));
+            //ZeroStates[N].InitialiseTo(ZeroStatesInit[N]);
+
             var StatesInit = Variable.Array(Variable.Array<Discrete>(T), N);
-            StatesInit.ObservedValue = Util.ArrayInit(N.SizeAsInt, n => Util.ArrayInit(T.SizeAsInt, t => Discrete.PointMass(Rand.Int(K.SizeAsInt), K.SizeAsInt)));
+            StatesInit.ObservedValue = Util.ArrayInit(N.SizeAsInt,
+                                                      n => Util.ArrayInit(T.SizeAsInt, t => Discrete.PointMass(Rand.Int(K.SizeAsInt), K.SizeAsInt)));
             States[N][T].InitialiseTo(StatesInit[N][T]);
         }
 
@@ -105,7 +110,7 @@ namespace MarkovMixtureModel
             CPTTransPosterior = engine.Infer<Dirichlet[]>(CPTTrans);
             ProbInitPosterior = engine.Infer<Dirichlet>(ProbInit);
 
-            Console.WriteLine("ESTIMATED: ProbInit Posterior:");
+            Console.WriteLine("\nESTIMATED: ProbInit Posterior:");
             Console.WriteLine(ProbInitPosterior.GetMean());
 
             Console.WriteLine("\nESTIMATED: CPTTrans Posterior:");

@@ -17,10 +17,10 @@ namespace MarkovMixtureModel
 
         public static void TestMarkovMixtureModel()
         {
-            Rand.Restart(20190);
+            Rand.Restart(2018);
 
             int N = 1000;
-            int T = 10;
+            int T = 100;
             int K = 3;
 
             // hyperparameters
