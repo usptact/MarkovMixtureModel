@@ -17,36 +17,73 @@ namespace MarkovMixtureModel
 
         public static void TestMarkovMixtureModel()
         {
-            Rand.Restart(2018);
+            Rand.Restart(2019);
 
-            int N = 1000;
-            int T = 100;
-            int K = 3;
+            int C = 4;          // number of clusters
+            int N = 100;       // total number of sequences
+            int T = 10;        // sequence length
+            int K = 3;          // total number of states
 
+            //
             // hyperparameters
-            Dirichlet ProbInitPriorObs = Dirichlet.Uniform(K);
-            Dirichlet[] CPTTransPriorObs = Enumerable.Repeat(Dirichlet.Uniform(K), K).ToArray();
+            //
 
+            Dirichlet ClusterPriorObs = Dirichlet.Uniform(C);
+            Dirichlet[] ProbInitPriorObs = Enumerable.Repeat(Dirichlet.Uniform(K), C).ToArray();
+            Dirichlet[][] CPTTransPriorObs = Enumerable.Repeat(Enumerable.Repeat(Dirichlet.Uniform(K), K).ToArray(), C).ToArray();
+
+            //
             // sample model parameters
-            double[] init = ProbInitPriorObs.Sample().ToArray();
-            double[][] trans = new double[K][];
-            for (int i = 0; i < K; i++)
-                trans[i] = CPTTransPriorObs[i].Sample().ToArray();
+            //
 
-            Console.WriteLine("TRUE ProbInit:");
-            Console.WriteLine("[{0:0.###}]", string.Join(" ", init));
+            //double[] clusterProbs = ClusterPriorObs.Sample().ToArray();
+            double[] clusterProbs = new double[]{ 0.1, 0.3, 0.5, 0.1 };
 
-            Console.WriteLine("\nTRUE CPTTrans:");
-            for (int i = 0; i < trans.Length; i++)
-                Console.WriteLine("[{0:0.###}]", string.Join(" ", trans[i]));
+            double[][] init = new double[C][];
+            double[][][] trans = new double[C][][];
+            int[][] states = new int[N][];
 
-            // generate some data
-            int[][] data = GenerateData(init, trans, T, N);
+            int counter = 0;
+            for (int c = 0; c < C; c++)
+            {
+                Console.WriteLine("=== CLUSTER #{0} ===", c);
 
-            MarkovMixtureModel model = new MarkovMixtureModel(N, T, K);
+                // number of points to generate in this cluster
+                int nc = (int)Math.Round(clusterProbs[c] * 100);
 
-            model.SetPriors(ProbInitPriorObs, CPTTransPriorObs);
-            model.ObserveData(data);
+                // current cluster init state probabilities
+                init[c] = ProbInitPriorObs[c].Sample().ToArray();
+
+                Console.WriteLine("\n\tTRUE ProbInit:");
+                Console.WriteLine("\t[{0:0.###}]", string.Join(" ", init[c]));
+
+                // current cluster transition probability matrix
+                trans[c] = new double[K][];
+                for (int i = 0; i < K; i++)
+                    trans[c][i] = CPTTransPriorObs[c][i].Sample().ToArray();
+
+                Console.WriteLine("\n\n\tTRUE CPTTrans:");
+                for (int i = 0; i < trans[c].Length; i++)
+                    Console.WriteLine("\t[{0:0.###}]", string.Join(" ", trans[c][i]));
+
+                int[][] cstates = GenerateData(init[c], trans[c], T, nc);
+                for (int i = 0; i < nc; i++)
+                {
+                    states[counter] = new int[T];
+                    for (int j = 0; j < T; j++)
+                    {
+                        states[counter][j] = cstates[i][j];
+                    }
+                    counter++;
+                }
+            }
+
+            Console.WriteLine();
+
+            MarkovMixtureModel model = new MarkovMixtureModel(C, N, T, K);
+
+            model.SetPriors(ClusterPriorObs, ProbInitPriorObs, CPTTransPriorObs);
+            model.ObserveData(states);
             model.InitializeStatesRandomly();
             model.InferPosteriors();
         }
