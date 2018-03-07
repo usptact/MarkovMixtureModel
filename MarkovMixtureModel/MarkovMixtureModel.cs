@@ -95,6 +95,7 @@ namespace MarkovMixtureModel
             }
 
             engine = new InferenceEngine();
+            engine.Compiler.UseParallelForLoops = true;
         }
 
         public void SetPriors(Dirichlet ClusterPriorParamObs, Dirichlet[] ProbInitPriorParamObs, Dirichlet[][] CPTTransPriorObs)
