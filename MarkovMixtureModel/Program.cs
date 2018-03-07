@@ -37,7 +37,7 @@ namespace MarkovMixtureModel
             //
 
             //double[] clusterProbs = ClusterPriorObs.Sample().ToArray();
-            double[] clusterProbs = new double[]{ 0.25, 0.25, 0.25, 0.25 };
+            double[] clusterProbs = new double[]{ 0.05, 0.15, 0.4, 0.4 };
 
             Console.WriteLine("=== TRUE PARAMETERS ===");
             Console.WriteLine("ClusterProbs:");
