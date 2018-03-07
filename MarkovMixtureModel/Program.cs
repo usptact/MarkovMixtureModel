@@ -20,8 +20,8 @@ namespace MarkovMixtureModel
             Rand.Restart(2019);
 
             int C = 4;          // number of clusters
-            int N = 100;       // total number of sequences
-            int T = 10;        // sequence length
+            int N = 1000;       // total number of sequences
+            int T = 100;        // sequence length
             int K = 3;          // total number of states
 
             //
@@ -37,7 +37,11 @@ namespace MarkovMixtureModel
             //
 
             //double[] clusterProbs = ClusterPriorObs.Sample().ToArray();
-            double[] clusterProbs = new double[]{ 0.1, 0.3, 0.5, 0.1 };
+            double[] clusterProbs = new double[]{ 0.25, 0.25, 0.25, 0.25 };
+
+            Console.WriteLine("=== TRUE PARAMETERS ===");
+            Console.WriteLine("ClusterProbs:");
+            Console.WriteLine("\t[{0:0.###}]", string.Join(" ", clusterProbs));
 
             double[][] init = new double[C][];
             double[][][] trans = new double[C][][];
@@ -49,7 +53,7 @@ namespace MarkovMixtureModel
                 Console.WriteLine("=== CLUSTER #{0} ===", c);
 
                 // number of points to generate in this cluster
-                int nc = (int)Math.Round(clusterProbs[c] * 100);
+                int nc = (int)Math.Round(N * clusterProbs[c]);
 
                 // current cluster init state probabilities
                 init[c] = ProbInitPriorObs[c].Sample().ToArray();
@@ -62,7 +66,7 @@ namespace MarkovMixtureModel
                 for (int i = 0; i < K; i++)
                     trans[c][i] = CPTTransPriorObs[c][i].Sample().ToArray();
 
-                Console.WriteLine("\n\n\tTRUE CPTTrans:");
+                Console.WriteLine("\n\tTRUE CPTTrans:");
                 for (int i = 0; i < trans[c].Length; i++)
                     Console.WriteLine("\t[{0:0.###}]", string.Join(" ", trans[c][i]));
 

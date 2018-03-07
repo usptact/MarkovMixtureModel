@@ -62,10 +62,13 @@ namespace MarkovMixtureModel
             CPTTransPrior = Variable.Array(Variable.Array<Dirichlet>(K), C);
             CPTTrans = Variable.Array(Variable.Array<Vector>(K), C).Named("CPTTrans");
             CPTTrans[C][K] = Variable<Vector>.Random(CPTTransPrior[C][K]);
-            CPTTrans.SetValueRange(C);
+            for (int i = 0; i < NumClusters; i++)
+                CPTTrans[i].SetValueRange(K);
 
             // define primary model variables -- actual states
             States = Variable.Array(Variable.Array<int>(T), N).Named("States");
+            for (int i = 0; i < NumChains; i++)
+                States[i].SetValueRange(K);
 
             // define aux model variable
             Z = Variable.Array<int>(N);
@@ -128,14 +131,19 @@ namespace MarkovMixtureModel
             CPTTransPosterior = engine.Infer<Dirichlet[][]>(CPTTrans);
             ProbInitPosterior = engine.Infer<Dirichlet[]>(ProbInit);
 
-            /*
-            Console.WriteLine("\nESTIMATED: ProbInit Posterior:");
-            Console.WriteLine(ProbInitPosterior.GetMean());
+            Console.WriteLine("\n === PARAMETER ESTIMATES ===");
+            Console.WriteLine("ProbClusterPosterior: {0}", ProbClusterPosterior.GetMean());
 
-            Console.WriteLine("\nESTIMATED: CPTTrans Posterior:");
-            for (int i = 0; i < CPTTransPosterior.Length; i++)
-                Console.WriteLine(CPTTransPosterior[i].GetMean());
-            */
+            for (int c = 0; c < C.SizeAsInt; c++)
+            {
+                Console.WriteLine("\t=== CLUSTER #{0} ===", c);
+
+                Console.WriteLine("\tProbInit Posterior: {0}", ProbInitPosterior[c].GetMean());
+
+                Console.WriteLine("\n\tCPTTrans Posterior:");
+                for (int i = 0; i < CPTTransPosterior[c].Length; i++)
+                    Console.WriteLine("\t{0}", CPTTransPosterior[c][i].GetMean());
+            }
         }
     }
 }
