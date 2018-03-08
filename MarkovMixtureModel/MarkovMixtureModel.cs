@@ -62,13 +62,11 @@ namespace MarkovMixtureModel
             CPTTransPrior = Variable.Array(Variable.Array<Dirichlet>(K), C);
             CPTTrans = Variable.Array(Variable.Array<Vector>(K), C).Named("CPTTrans");
             CPTTrans[C][K] = Variable<Vector>.Random(CPTTransPrior[C][K]);
-            for (int i = 0; i < NumClusters; i++)
-                CPTTrans[i].SetValueRange(K);
+            CPTTrans.SetValueRange(K);
 
             // define primary model variables -- actual states
             States = Variable.Array(Variable.Array<int>(T), N).Named("States");
-            for (int i = 0; i < NumChains; i++)
-                States[i].SetValueRange(K);
+            States.SetValueRange(K);
 
             // define aux model variable
             Z = Variable.Array<int>(N);
