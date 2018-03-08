@@ -117,13 +117,6 @@ namespace MarkovMixtureModel
             for (int i = 0; i < Zinit.Length; i++)
                 Zinit[i] = Discrete.PointMass(Rand.Int(C.SizeAsInt), C.SizeAsInt);
             Z.InitialiseTo(Distribution<int>.Array(Zinit));
-
-            /*
-            var StatesInit = Variable.Array(Variable.Array<Discrete>(T), N);
-            StatesInit.ObservedValue = Util.ArrayInit(N.SizeAsInt,
-                                                      n => Util.ArrayInit(T.SizeAsInt, t => Discrete.PointMass(Rand.Int(K.SizeAsInt), K.SizeAsInt)));
-            States[N][T].InitialiseTo(StatesInit[N][T]);
-            */
         }
 
         public void InferPosteriors()
@@ -145,6 +138,12 @@ namespace MarkovMixtureModel
                 for (int i = 0; i < CPTTransPosterior[c].Length; i++)
                     Console.WriteLine("\t{0}", CPTTransPosterior[c][i].GetMean());
             }
+        }
+
+        public Discrete[] GetClusterAssignments()
+        {
+            Discrete[] ClusterAssignments = engine.Infer<Discrete[]>(Z);
+            return ClusterAssignments;
         }
     }
 }

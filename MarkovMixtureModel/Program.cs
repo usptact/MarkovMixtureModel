@@ -20,7 +20,7 @@ namespace MarkovMixtureModel
             Rand.Restart(2019);
 
             int C = 4;          // number of clusters
-            int N = 1000;       // total number of sequences
+            int N = 100;       // total number of sequences
             int T = 100;        // sequence length
             int K = 3;          // total number of states
 
@@ -58,17 +58,17 @@ namespace MarkovMixtureModel
                 // current cluster init state probabilities
                 init[c] = ProbInitPriorObs[c].Sample().ToArray();
 
-                Console.WriteLine("\n\tTRUE ProbInit:");
-                Console.WriteLine("\t[{0:0.###}]", string.Join(" ", init[c]));
+                Console.WriteLine("\n\tInit:");
+                Console.WriteLine("\t[{0}]", string.Join(" ", init[c]));
 
                 // current cluster transition probability matrix
                 trans[c] = new double[K][];
                 for (int i = 0; i < K; i++)
                     trans[c][i] = CPTTransPriorObs[c][i].Sample().ToArray();
 
-                Console.WriteLine("\n\tTRUE CPTTrans:");
+                Console.WriteLine("\n\tCPTTrans:");
                 for (int i = 0; i < trans[c].Length; i++)
-                    Console.WriteLine("\t[{0:0.###}]", string.Join(" ", trans[c][i]));
+                    Console.WriteLine("\t[{0}]", string.Join(" ", trans[c][i]));
 
                 int[][] cstates = GenerateData(init[c], trans[c], T, nc);
                 for (int i = 0; i < nc; i++)
@@ -90,6 +90,12 @@ namespace MarkovMixtureModel
             model.ObserveData(states);
             model.InitializeStatesRandomly();
             model.InferPosteriors();
+
+            Discrete[] ClusterAssignments = model.GetClusterAssignments();
+
+            Console.WriteLine("\n=== CLUSTER ASSIGNMENTS ===");
+            for (int i = 0; i < N; i++)
+                Console.WriteLine(ClusterAssignments[i].GetProbs());
         }
 
         public static int[][] GenerateData(double[] init, double[][] trans, int T, int N)
