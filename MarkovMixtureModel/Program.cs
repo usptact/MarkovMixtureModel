@@ -12,7 +12,15 @@ namespace MarkovMixtureModel
     {
         static void Main(string[] args)
         {
-            TestMarkovMixtureModel();
+            //TestMarkovMixtureModel();
+
+            string fileName = @"sample.txt";
+
+            Reader reader = new Reader(fileName);
+            reader.Read();
+
+            int[][] data = reader.GetData();
+            int[] sizes = reader.GetSize();
         }
 
         public static void TestMarkovMixtureModel()
