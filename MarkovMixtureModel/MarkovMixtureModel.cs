@@ -16,6 +16,8 @@ namespace MarkovMixtureModel
         private Range K;
 
         // model variables
+        private Variable<int> NumSequences;
+        private VariableArray<int> SequenceSizes;
         private VariableArray<VariableArray<int>, int[][]> States;
 
         // model parameters
@@ -43,8 +45,6 @@ namespace MarkovMixtureModel
         {
             // set ranges
             C = new Range(NumClusters).Named("C");
-            N = new Range(NumChains).Named("N");
-            T = new Range(ChainLength).Named("T");
             K = new Range(NumStates).Named("K");
 
             // set cluster
@@ -63,6 +63,12 @@ namespace MarkovMixtureModel
             CPTTrans = Variable.Array(Variable.Array<Vector>(K), C).Named("CPTTrans");
             CPTTrans[C][K] = Variable<Vector>.Random(CPTTransPrior[C][K]);
             CPTTrans.SetValueRange(K);
+
+            // define jagged array sizes and ranges
+            NumSequences = Variable.New<int>();
+            N = new Range(NumSequences);
+            SequenceSizes = Variable.Array<int>(N);
+            T = new Range(SequenceSizes[N]);
 
             // define primary model variables -- actual states
             States = Variable.Array(Variable.Array<int>(T), N).Named("States");
@@ -103,8 +109,10 @@ namespace MarkovMixtureModel
             CPTTransPrior.ObservedValue = CPTTransPriorObs;
         }
 
-        public void ObserveData(int[][] StatesData)
+        public void ObserveData(int[][] StatesData, int[] StatesSizes)
         {
+            NumSequences.ObservedValue = StatesData.Length;
+            SequenceSizes.ObservedValue = StatesSizes;
             States.ObservedValue = StatesData;
         }
 

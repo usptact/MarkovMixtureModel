@@ -14,6 +14,10 @@ namespace MarkovMixtureModel
         {
             //TestMarkovMixtureModel();
 
+            //
+            // Get data
+            //
+
             string fileName = @"sample.txt";
 
             Reader reader = new Reader(fileName);
@@ -21,6 +25,19 @@ namespace MarkovMixtureModel
 
             int[][] data = reader.GetData();
             int[] sizes = reader.GetSize();
+
+            //
+            // Set parameters
+            //
+
+            int C = 4;
+            int K = 2;
+
+            var ClusterPriorObs = Dirichlet.Uniform(C);
+            var ProbInitPriorObs = Enumerable.Repeat(Dirichlet.Uniform(K), C).ToArray();
+            var CPTTransPriorObs = Enumerable.Repeat(Enumerable.Repeat(Dirichlet.Uniform(K), K).ToArray(), C).ToArray();
+
+            var clusterProbs = new double[] { 0.05, 0.15, 0.4, 0.4 };
         }
 
         public static void TestMarkovMixtureModel()
