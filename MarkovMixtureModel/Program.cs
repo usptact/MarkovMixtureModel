@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using MicrosoftResearch.Infer.Distributions;
 using MicrosoftResearch.Infer.Maths;
 
@@ -25,19 +22,33 @@ namespace MarkovMixtureModel
 
             int[][] data = reader.GetData();
             int[] sizes = reader.GetSize();
+            int K = reader.GetNumberOfStates();
 
             //
-            // Set parameters
+            // Set parameters: number of clusters
             //
 
             int C = 4;
-            int K = 2;
 
-            var ClusterPriorObs = Dirichlet.Uniform(C);
-            var ProbInitPriorObs = Enumerable.Repeat(Dirichlet.Uniform(K), C).ToArray();
-            var CPTTransPriorObs = Enumerable.Repeat(Enumerable.Repeat(Dirichlet.Uniform(K), K).ToArray(), C).ToArray();
+            //
+            // Set priors
+            //
 
-            var clusterProbs = new double[] { 0.05, 0.15, 0.4, 0.4 };
+            MarkovMixtureModel.GetUniformPriors(C, K,
+                                                out Dirichlet ClusterPriorObs,
+                                                out Dirichlet[] ProbInitPriorObs,
+                                                out Dirichlet[][] CPTTransPriorObs);
+
+            //
+            // Model training
+            //
+
+            MarkovMixtureModel model = new MarkovMixtureModel(C);
+
+            model.SetPriors(ClusterPriorObs, ProbInitPriorObs, CPTTransPriorObs);
+            model.ObserveData(data, sizes, K);
+            model.InitializeStatesRandomly();
+            model.InferPosteriors();
         }
 
         public static void TestMarkovMixtureModel()
@@ -53,16 +64,17 @@ namespace MarkovMixtureModel
             // hyperparameters
             //
 
-            Dirichlet ClusterPriorObs = Dirichlet.Uniform(C);
-            Dirichlet[] ProbInitPriorObs = Enumerable.Repeat(Dirichlet.Uniform(K), C).ToArray();
-            Dirichlet[][] CPTTransPriorObs = Enumerable.Repeat(Enumerable.Repeat(Dirichlet.Uniform(K), K).ToArray(), C).ToArray();
+            MarkovMixtureModel.GetUniformPriors(C, K,
+                                                out Dirichlet ClusterPriorObs,
+                                                out Dirichlet[] ProbInitPriorObs,
+                                                out Dirichlet[][] CPTTransPriorObs);
 
             //
             // sample model parameters
             //
 
             //double[] clusterProbs = ClusterPriorObs.Sample().ToArray();
-            double[] clusterProbs = new double[]{ 0.05, 0.15, 0.4, 0.4 };
+            double[] clusterProbs = { 0.05, 0.15, 0.4, 0.4 };
 
             Console.WriteLine("=== TRUE PARAMETERS ===");
             Console.WriteLine("ClusterProbs:");
@@ -71,6 +83,7 @@ namespace MarkovMixtureModel
             double[][] init = new double[C][];
             double[][][] trans = new double[C][][];
             int[][] states = new int[N][];
+            int[] sizes = Enumerable.Repeat(T, N).ToArray();
 
             int counter = 0;
             for (int c = 0; c < C; c++)
@@ -109,10 +122,10 @@ namespace MarkovMixtureModel
 
             Console.WriteLine();
 
-            MarkovMixtureModel model = new MarkovMixtureModel(C, N, T, K);
+            MarkovMixtureModel model = new MarkovMixtureModel(C);
 
             model.SetPriors(ClusterPriorObs, ProbInitPriorObs, CPTTransPriorObs);
-            model.ObserveData(states);
+            model.ObserveData(states, sizes, K);
             model.InitializeStatesRandomly();
             model.InferPosteriors();
 

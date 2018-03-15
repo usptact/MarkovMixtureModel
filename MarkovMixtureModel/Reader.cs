@@ -6,33 +6,28 @@ namespace MarkovMixtureModel
 {
     public class Reader
     {
-        public string FileName;
-        public List<int[]> Data;
+        string FileName;
+        List<int[]> Data;
+        int NumberOfStates;
 
-        public Reader(string FileName)
+        public Reader(string fName)
         {
-            this.FileName = FileName;
+            FileName = fName;
+            Data = new List<int[]>();
+            NumberOfStates = -1;
         }
 
         public void Read()
         {
             string line;
-
-            Data = new List<int[]>();
-
             StreamReader reader = new StreamReader(FileName);
-
             while((line = reader.ReadLine()) != null)
             {
                 if (string.IsNullOrEmpty(line))
                     continue;
-                else
-                {
-                    int[] states = ParseLine(line);
-                    Data.Add(states);
-                }
+                int[] states = ParseLine(line);
+                Data.Add(states);
             }
-
             reader.Close();
         }
 
@@ -41,7 +36,6 @@ namespace MarkovMixtureModel
         {
             int numLines = Data.Count;
             int[][] data = new int[numLines][];
-
             for (int i = 0; i < numLines; i++)
             {
                 int[] seq = Data[i];
@@ -51,7 +45,6 @@ namespace MarkovMixtureModel
                 for (int j = 0; j < seqLength; j++)
                     data[i][j] = seq[j];
             }
-
             return data;
         }
 
@@ -60,23 +53,26 @@ namespace MarkovMixtureModel
         {
             int numLines = Data.Count;
             int[] sizes = new int[numLines];
-
             for (int i = 0; i < numLines; i++)
                 sizes[i] = Data[i].Length;
-
             return sizes;
         }
 
+        public int GetNumberOfStates()
+        {
+            return NumberOfStates;
+        }
+
         // parses a single text line into array of integers
-        private int[] ParseLine(string line)
+        int[] ParseLine(string line)
         {
             string[] tokens = line.Split(' ');
             int numTokens = tokens.Length;
             int[] states = new int[numTokens];
-
-            for (int i = 0; i < numTokens; i++)
+            for (int i = 0; i < numTokens; i++) {
                 states[i] = Int32.Parse(tokens[i]);
-
+                NumberOfStates = Math.Max(NumberOfStates, states[i]);
+            }
             return states;
         }
     }

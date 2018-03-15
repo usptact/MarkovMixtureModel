@@ -4,45 +4,52 @@ using MicrosoftResearch.Infer.Models;
 using MicrosoftResearch.Infer.Maths;
 using MicrosoftResearch.Infer.Distributions;
 using MicrosoftResearch.Infer.Utils;
+using System.Linq;
 
 namespace MarkovMixtureModel
 {
     public class MarkovMixtureModel
     {
         // ranges
-        private Range C;
-        private Range N;
-        private Range T;
-        private Range K;
+        Range C;
+        Range N;
+        Range T;
+        Range K;
 
         // model variables
-        private Variable<int> NumSequences;
-        private VariableArray<int> SequenceSizes;
-        private VariableArray<VariableArray<int>, int[][]> States;
+        Variable<int> NumClusters;
+        Variable<int> NumSequences;
+        Variable<int> NumStates;
+        VariableArray<int> SequenceSizes;
+        VariableArray<VariableArray<int>, int[][]> States;
 
         // model parameters
-        private Variable<Vector> ProbCluster;
-        private VariableArray<Vector> ProbInit;
-        private VariableArray<VariableArray<Vector>, Vector[][]> CPTTrans;
+        Variable<Vector> ProbCluster;
+        VariableArray<Vector> ProbInit;
+        VariableArray<VariableArray<Vector>, Vector[][]> CPTTrans;
 
         // aux model variables
-        private VariableArray<int> Z;
+        VariableArray<int> Z;
 
         // prior distributions
-        private Variable<Dirichlet> ProbClusterPrior;
-        private VariableArray<Dirichlet> ProbInitPrior;
-        private VariableArray<VariableArray<Dirichlet>, Dirichlet[][]> CPTTransPrior;
+        Variable<Dirichlet> ProbClusterPrior;
+        VariableArray<Dirichlet> ProbInitPrior;
+        VariableArray<VariableArray<Dirichlet>, Dirichlet[][]> CPTTransPrior;
 
         // posteriors
-        private Dirichlet ProbClusterPosterior;
-        private Dirichlet[][] CPTTransPosterior;
-        private Dirichlet[] ProbInitPosterior;
+        Dirichlet ProbClusterPosterior;
+        Dirichlet[][] CPTTransPosterior;
+        Dirichlet[] ProbInitPosterior;
 
-        private InferenceEngine engine;
+        InferenceEngine engine;
 
 
-        public MarkovMixtureModel(int NumClusters, int NumChains, int ChainLength, int NumStates)
+        public MarkovMixtureModel(int NumberOfClusters)
         {
+            NumClusters = Variable.Observed(NumberOfClusters);
+            NumSequences = Variable.New<int>();
+            NumStates = Variable.New<int>();
+
             // set ranges
             C = new Range(NumClusters).Named("C");
             K = new Range(NumStates).Named("K");
@@ -65,7 +72,7 @@ namespace MarkovMixtureModel
             CPTTrans.SetValueRange(K);
 
             // define jagged array sizes and ranges
-            NumSequences = Variable.New<int>();
+
             N = new Range(NumSequences);
             SequenceSizes = Variable.Array<int>(N);
             T = new Range(SequenceSizes[N]);
@@ -74,7 +81,7 @@ namespace MarkovMixtureModel
             States = Variable.Array(Variable.Array<int>(T), N).Named("States");
             States.SetValueRange(K);
 
-            // define aux model variable
+            // define cluster assignment array
             Z = Variable.Array<int>(N);
 
             using (Variable.ForEach(N))
@@ -102,6 +109,18 @@ namespace MarkovMixtureModel
             engine.Compiler.UseParallelForLoops = true;
         }
 
+        // return uniform priors
+        public static void GetUniformPriors(int NumberOfClusters, int NumberOfStates,
+                                            out Dirichlet ClusterPriorObs,
+                                            out Dirichlet[] ProbInitPriorObs,
+                                            out Dirichlet[][] CPTTransPriorObs)
+        {
+            ClusterPriorObs = Dirichlet.Uniform(NumberOfClusters);
+            ProbInitPriorObs = Enumerable.Repeat(Dirichlet.Uniform(NumberOfStates), NumberOfClusters).ToArray();
+            CPTTransPriorObs = Enumerable.Repeat(Enumerable.Repeat(Dirichlet.Uniform(NumberOfStates), NumberOfStates).ToArray(), NumberOfClusters).ToArray();
+        }
+
+        // set model priors
         public void SetPriors(Dirichlet ClusterPriorParamObs, Dirichlet[] ProbInitPriorParamObs, Dirichlet[][] CPTTransPriorObs)
         {
             ProbClusterPrior.ObservedValue = ClusterPriorParamObs;
@@ -109,13 +128,16 @@ namespace MarkovMixtureModel
             CPTTransPrior.ObservedValue = CPTTransPriorObs;
         }
 
-        public void ObserveData(int[][] StatesData, int[] StatesSizes)
+        // set data
+        public void ObserveData(int[][] StatesData, int[] StatesSizes, int NumberOfStates)
         {
+            NumStates.ObservedValue = NumberOfStates;
             NumSequences.ObservedValue = StatesData.Length;
             SequenceSizes.ObservedValue = StatesSizes;
             States.ObservedValue = StatesData;
         }
 
+        // initialize cluster assignments at random
         public void InitializeStatesRandomly()
         {
             // random cluster assignments
@@ -125,6 +147,7 @@ namespace MarkovMixtureModel
             Z.InitialiseTo(Distribution<int>.Array(Zinit));
         }
 
+        // infer unobserved model parameters
         public void InferPosteriors()
         {
             ProbClusterPosterior = engine.Infer<Dirichlet>(ProbCluster);
@@ -146,6 +169,7 @@ namespace MarkovMixtureModel
             }
         }
 
+        // infer cluster assigments
         public Discrete[] GetClusterAssignments()
         {
             Discrete[] ClusterAssignments = engine.Infer<Discrete[]>(Z);
