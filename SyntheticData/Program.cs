@@ -8,14 +8,21 @@ namespace SyntheticData
     {
         public static void Main(string[] args)
         {
-            int NumPoints = 1000;
+            int NumPoints = 10000;
             int NumClusters = 4;
             int NumStates = 3;
+
+            System.Console.WriteLine("===========================================================");
+            System.Console.WriteLine("Generating {0} data points in {1} clusters and {2} states.", 
+                                     NumPoints, NumClusters, NumStates);
+            System.Console.WriteLine("===========================================================");
 
             GenerateModelParameters(NumClusters, NumStates,
                                     out Discrete clusterProbs,
                                     out Discrete[] initProbs,
                                     out Discrete[][] transProbs);
+
+            PrintModelParameters(clusterProbs, initProbs, transProbs);
 
             int[][] data = GenerateData(NumPoints,
                                         clusterProbs,
@@ -87,6 +94,24 @@ namespace SyntheticData
                 data[i] = seq;
             }
             return data;
+        }
+
+        // prints model parameters
+        public static void PrintModelParameters(Discrete clusterProbs,
+                                                Discrete[] initProbs,
+                                                Discrete[][] transProbs)
+        {
+            System.Console.WriteLine("Cluster probabilities: {0}", clusterProbs);
+            int NumClusters = initProbs.Length;
+            for (int c = 0; c < NumClusters; c++)
+            {
+                System.Console.WriteLine("\n=== Cluster #{0} ===", c);
+                System.Console.WriteLine("Init: {0}", initProbs[c].GetProbs());
+                for (int k = 0; k < transProbs[c][0].Dimension; k++)
+                {
+                    System.Console.WriteLine(transProbs[c][k].GetProbs());
+                }
+            }
         }
     }
 }
