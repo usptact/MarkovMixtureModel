@@ -154,18 +154,15 @@ namespace MarkovMixtureModel
             CPTTransPosterior = engine.Infer<Dirichlet[][]>(CPTTrans);
             ProbInitPosterior = engine.Infer<Dirichlet[]>(ProbInit);
 
-            Console.WriteLine("\n === PARAMETER ESTIMATES ===");
-            Console.WriteLine("ProbClusterPosterior: {0}", ProbClusterPosterior.GetMean());
+            Console.WriteLine("=== PARAMETER ESTIMATES ===");
+            Console.WriteLine("Cluster Probabilities: {0}", ProbClusterPosterior.GetMean());
 
             for (int c = 0; c < NumClusters.ObservedValue; c++)
             {
-                Console.WriteLine("\t=== CLUSTER #{0} ===", c);
-
-                Console.WriteLine("\tProbInit Posterior: {0}", ProbInitPosterior[c].GetMean());
-
-                Console.WriteLine("\n\tCPTTrans Posterior:");
+                Console.WriteLine("\n=== Cluster #{0} ===", c);
+                Console.WriteLine("Init: {0}", ProbInitPosterior[c].GetMean());
                 for (int i = 0; i < CPTTransPosterior[c].Length; i++)
-                    Console.WriteLine("\t{0}", CPTTransPosterior[c][i].GetMean());
+                    Console.WriteLine(CPTTransPosterior[c][i].GetMean());
             }
         }
 

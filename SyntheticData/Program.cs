@@ -71,7 +71,6 @@ namespace SyntheticData
         // generate data given model parameters
         public static int[][] GenerateData(int NumPoints,
                                            Discrete clusterProbs,
-
                                            Discrete[] initProbs,
                                            Discrete[][] transProbs)
         {
@@ -80,9 +79,7 @@ namespace SyntheticData
             for (int i = 0; i < NumPoints; i++)
             {
                 int cluster = clusterProbs.Sample();
-
                 int seqLength = seqLengthDist.Sample() + 3;
-
                 int[] seq = new int[seqLength];
                 for (int t = 0; t < seqLength; t++)
                 {
@@ -101,7 +98,7 @@ namespace SyntheticData
                                                 Discrete[] initProbs,
                                                 Discrete[][] transProbs)
         {
-            System.Console.WriteLine("Cluster probabilities: {0}", clusterProbs);
+            System.Console.WriteLine("Cluster probabilities: {0}", clusterProbs.GetProbs());
             int NumClusters = initProbs.Length;
             for (int c = 0; c < NumClusters; c++)
             {
