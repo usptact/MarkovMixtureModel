@@ -93,22 +93,31 @@ namespace MarkovMixtureModel
 
         // generate data given model parameters
         public int[][] GenerateData(int NumPoints,
-                                    double[] clusterProbs,
-                                    double[][] initProbs,
-                                    double[][][] transProbs)
+                                    Discrete clusterProbs,
+                                    Discrete[] initProbs,
+                                    Discrete[][] transProbs)
         {
             int[][] data = new int[NumPoints][];
 
-            Discrete clusterDist = new Discrete(clusterProbs);
-
             int NumClusters = initProbs.Length;
+
+            Poisson seqLengthDist = new Poisson(5);
 
             for (int i = 0; i < NumPoints; i++)
             {
-                int cluster = clusterDist.Sample();
+                int cluster = clusterProbs.Sample();
 
-                Discrete initDist = new Discrete(initProbs[cluster]);
-                Discrete[] transDist = new Discrete[NumClusters];
+                int seqLength = seqLengthDist.Sample() + 3;
+
+                int[] seq = new int[seqLength];
+                for (int t = 0; t < seqLength; t++)
+                {
+                    if (t == 0)
+                        seq[0] = initProbs[cluster].Sample();
+                    else
+                        seq[t] = transProbs[cluster][seq[t - 1]].Sample();
+                }
+                data[i] = seq;
             }
 
             return data;
