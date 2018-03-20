@@ -9,8 +9,15 @@ namespace MarkovMixtureModel
     {
         static void Main(string[] args)
         {
-            //TestMarkovMixtureModel();
+            int NumClusters = 3;
+            int NumStates = 2;
 
+            GenerateModelParameters(NumClusters, NumStates,
+                                    out Discrete clusterProbs,
+                                    out Discrete[] initProbs,
+                                    out Discrete[][] transProbs);
+
+            /*
             //
             // Get data
             //
@@ -49,6 +56,62 @@ namespace MarkovMixtureModel
             model.ObserveData(data, sizes, K);
             model.InitializeStatesRandomly();
             model.InferPosteriors();
+            */
+
+            Console.WriteLine();
+        }
+
+        // generate model parameters
+        public static void GenerateModelParameters(int NumClusters, int NumStates,
+                                                   out Discrete clusterProbs,
+                                                   out Discrete[] initProbs,
+                                                   out Discrete[][] transProbs)
+        {
+            // cluster proportions
+            Dirichlet clusterDist = Dirichlet.Uniform(NumClusters);
+            double[] clusterProbsParams = clusterDist.Sample().ToArray();
+            clusterProbs = new Discrete(clusterProbsParams);
+
+            // sample cluster-specific parameters
+            initProbs = new Discrete[NumClusters];
+            transProbs = new Discrete[NumClusters][];
+            for (int c = 0; c < NumClusters; c++)
+            {
+                Dirichlet cInit = Dirichlet.Uniform(NumStates);
+                double[] initProbsParam = cInit.Sample().ToArray();
+                initProbs[c] = new Discrete(initProbsParam);
+
+                Dirichlet transDist = Dirichlet.Uniform(NumStates);
+                transProbs[c] = new Discrete[NumStates];
+                for (int k = 0; k < NumStates; k++)
+                {
+                    double[] transProbsParam = transDist.Sample().ToArray();
+                    transProbs[c][k] = new Discrete(transProbsParam);
+                }
+            }
+        }
+
+        // generate data given model parameters
+        public int[][] GenerateData(int NumPoints,
+                                    double[] clusterProbs,
+                                    double[][] initProbs,
+                                    double[][][] transProbs)
+        {
+            int[][] data = new int[NumPoints][];
+
+            Discrete clusterDist = new Discrete(clusterProbs);
+
+            int NumClusters = initProbs.Length;
+
+            for (int i = 0; i < NumPoints; i++)
+            {
+                int cluster = clusterDist.Sample();
+
+                Discrete initDist = new Discrete(initProbs[cluster]);
+                Discrete[] transDist = new Discrete[NumClusters];
+            }
+
+            return data;
         }
 
         public static void TestMarkovMixtureModel()
