@@ -60,7 +60,7 @@ namespace MarkovMixtureModel
 
         public int GetNumberOfStates()
         {
-            return NumberOfStates;
+            return NumberOfStates + 1;
         }
 
         // parses a single text line into array of integers

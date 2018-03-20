@@ -141,9 +141,9 @@ namespace MarkovMixtureModel
         public void InitializeStatesRandomly()
         {
             // random cluster assignments
-            Discrete[] Zinit = new Discrete[N.SizeAsInt];
+            Discrete[] Zinit = new Discrete[NumSequences.ObservedValue];
             for (int i = 0; i < Zinit.Length; i++)
-                Zinit[i] = Discrete.PointMass(Rand.Int(C.SizeAsInt), C.SizeAsInt);
+                Zinit[i] = Discrete.PointMass(Rand.Int(NumClusters.ObservedValue), NumClusters.ObservedValue);
             Z.InitialiseTo(Distribution<int>.Array(Zinit));
         }
 
@@ -157,7 +157,7 @@ namespace MarkovMixtureModel
             Console.WriteLine("\n === PARAMETER ESTIMATES ===");
             Console.WriteLine("ProbClusterPosterior: {0}", ProbClusterPosterior.GetMean());
 
-            for (int c = 0; c < C.SizeAsInt; c++)
+            for (int c = 0; c < NumClusters.ObservedValue; c++)
             {
                 Console.WriteLine("\t=== CLUSTER #{0} ===", c);
 
