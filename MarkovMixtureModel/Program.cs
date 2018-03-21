@@ -20,7 +20,7 @@ namespace MarkovMixtureModel
             // Get data
             //
 
-            string fileName = @"sample.txt";
+            string fileName = @"sequences.txt";
 
             Reader reader = new Reader(fileName);
             reader.Read();

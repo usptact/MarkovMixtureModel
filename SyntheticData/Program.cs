@@ -8,9 +8,9 @@ namespace SyntheticData
     {
         public static void Main(string[] args)
         {
-            int NumPoints = 10000;
+            int NumPoints = 20000;
             int NumClusters = 4;
-            int NumStates = 3;
+            int NumStates = 5;
 
             System.Console.WriteLine("===========================================================");
             System.Console.WriteLine("Generating {0} data points in {1} clusters and {2} states.", 
@@ -24,18 +24,22 @@ namespace SyntheticData
 
             PrintModelParameters(clusterProbs, initProbs, transProbs);
 
-            int[][] data = GenerateData(NumPoints,
-                                        clusterProbs,
-                                        initProbs,
-                                        transProbs);
+            GenerateData(NumPoints, clusterProbs, initProbs, transProbs,
+                         out int[] clusters,
+                         out int[][] data);
 
-            StreamWriter file = new StreamWriter("sample.txt");
+            StreamWriter file1 = new StreamWriter("sequences.txt");
             for (int i = 0; i < NumPoints; i++)
             {
                 string line = string.Join(" ", data[i]);
-                file.WriteLine(line);
+                file1.WriteLine(line);
             }
-            file.Close();
+            file1.Close();
+
+            StreamWriter file2 = new StreamWriter("clusters.txt");
+            for (int i = 0; i < NumPoints; i++)
+                file2.WriteLine(clusters[i]);
+            file2.Close();
         }
 
         // generate model parameters
@@ -70,20 +74,28 @@ namespace SyntheticData
         }
 
         // generate data given model parameters
-        public static int[][] GenerateData(int NumPoints,
-                                           Discrete clusterProbs,
-                                           Discrete[] initProbs,
-                                           Discrete[][] transProbs)
+        public static void GenerateData(int NumPoints,
+                                        Discrete clusterProbs,
+                                        Discrete[] initProbs,
+                                        Discrete[][] transProbs,
+                                        out int[] clusters,
+                                        out int[][] data)
         {
-            int[][] data = new int[NumPoints][];
+            clusters = new int[NumPoints];
+            data = new int[NumPoints][];
 
             Poisson seqLengthDist = new Poisson(5);
 
             for (int i = 0; i < NumPoints; i++)
             {
+                // sample cluster
                 int cluster = clusterProbs.Sample();
+                clusters[i] = cluster;
+
+                // sample sequence length
                 int seqLength = seqLengthDist.Sample() + 3;
 
+                // sample sequence
                 int[] seq = new int[seqLength];
                 for (int t = 0; t < seqLength; t++)
                 {
@@ -92,10 +104,12 @@ namespace SyntheticData
                     else
                         seq[t] = transProbs[cluster][seq[t - 1]].Sample();
                 }
-                data[i] = seq;
-            }
 
-            return data;
+                // copy sequence into output array
+                data[i] = new int[seqLength];
+                for (int t = 0; t < seqLength; t++)
+                    data[i][t] = seq[t];
+            }
         }
 
         // prints model parameters
