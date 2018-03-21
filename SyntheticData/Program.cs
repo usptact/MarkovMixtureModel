@@ -49,21 +49,22 @@ namespace SyntheticData
             double[] clusterProbsParams = clusterDist.Sample().ToArray();
             clusterProbs = new Discrete(clusterProbsParams);
 
+            Dirichlet cInit = Dirichlet.Uniform(NumStates);
+            Dirichlet transDist = Dirichlet.Uniform(NumStates);
+
             // sample cluster-specific parameters
             initProbs = new Discrete[NumClusters];
             transProbs = new Discrete[NumClusters][];
             for (int c = 0; c < NumClusters; c++)
             {
-                Dirichlet cInit = Dirichlet.Uniform(NumStates);
                 double[] initProbsParam = cInit.Sample().ToArray();
-                initProbs[c] = new Discrete(initProbsParam);
+                initProbs[c] = new Discrete(initProbsParam);            // init
 
-                Dirichlet transDist = Dirichlet.Uniform(NumStates);
                 transProbs[c] = new Discrete[NumStates];
                 for (int k = 0; k < NumStates; k++)
                 {
                     double[] transProbsParam = transDist.Sample().ToArray();
-                    transProbs[c][k] = new Discrete(transProbsParam);
+                    transProbs[c][k] = new Discrete(transProbsParam);   // trans
                 }
             }
         }
@@ -75,11 +76,14 @@ namespace SyntheticData
                                            Discrete[][] transProbs)
         {
             int[][] data = new int[NumPoints][];
+
             Poisson seqLengthDist = new Poisson(5);
+
             for (int i = 0; i < NumPoints; i++)
             {
                 int cluster = clusterProbs.Sample();
                 int seqLength = seqLengthDist.Sample() + 3;
+
                 int[] seq = new int[seqLength];
                 for (int t = 0; t < seqLength; t++)
                 {
@@ -90,6 +94,7 @@ namespace SyntheticData
                 }
                 data[i] = seq;
             }
+
             return data;
         }
 
