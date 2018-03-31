@@ -12,56 +12,59 @@ namespace MarkovMixtureModel
         {
             var cmdInfo = new CommandLineInfo(args);
 
-            if (cmdInfo.Params.Length < 2)
+            // get mode
+            string mode = "";
+            if (cmdInfo.GotOption("mode"))
+                mode = cmdInfo.GetValue("mode");
+            else
             {
                 PrintHelpMessage();
                 Environment.Exit(1);
             }
 
-            // get verb
-            string verb = "";
-            if (cmdInfo.GotOption("--train"))
-                verb = cmdInfo.GetValue("--train");
-            if (cmdInfo.GotOption("--predict"))
-                verb = cmdInfo.GetValue("--predict");
-            if (verb == "")
+            if (string.Equals(mode, "train"))
+                Train(cmdInfo);                 // train the model
+
+            if (string.Equals(mode, "predict"))
+                Predict(cmdInfo);               // predict cluster assignments
+        }
+
+        static void Train(CommandLineInfo cmdInfo)
+        {
+            // get path to data file
+            string dataFilename = "";
+            if (cmdInfo.GotOption("data"))
+                dataFilename = cmdInfo.GetValue("data");
+            else
             {
                 PrintHelpMessage();
                 Environment.Exit(1);
             }
 
-            //
-            // Set parameters: number of clusters
-            //
+            // get number of clusters
+            int C = -1;
+            if (cmdInfo.GotOption("clusters"))
+                C = Int32.Parse(cmdInfo.GetValue("clusters"));
+            else
+            {
+                PrintHelpMessage();
+                Environment.Exit(1);
+            }
 
-            int C = 4;
-
-            //
-            // Get data
-            //
-
-            string fileName = @"sequences.txt";
-
-            Reader reader = new Reader(fileName);
+            Reader reader = new Reader(dataFilename);
             reader.Read();
 
             int[][] data = reader.GetData();
             int[] sizes = reader.GetSize();
             int K = reader.GetNumberOfStates();
 
-            //
-            // Set priors
-            //
-
+            // get uniform priors
             MarkovMixtureModel.GetUniformPriors(C, K,
                                                 out Dirichlet ClusterPriorObs,
                                                 out Dirichlet[] ProbInitPriorObs,
                                                 out Dirichlet[][] CPTTransPriorObs);
 
-            //
-            // Model training
-            //
-
+            // do model training
             MarkovMixtureModel model = new MarkovMixtureModel(C);
 
             model.SetPriors(ClusterPriorObs, ProbInitPriorObs, CPTTransPriorObs);
@@ -70,12 +73,17 @@ namespace MarkovMixtureModel
             model.InferPosteriors();
         }
 
+        static void Predict(CommandLineInfo cmdInfo)
+        {
+            
+        }
+
         static void PrintHelpMessage()
         {
             Console.WriteLine("Training:");
-            Console.WriteLine("\tUsage: MarkovMixtureModel.exe --train --data <data> --model <model>\n");
+            Console.WriteLine("\tUsage: MarkovMixtureModel.exe -mode:train -data:<data> -clusters:<int> -model:<model>\n");
             Console.WriteLine("Prediction:");
-            Console.WriteLine("\tUsage: MarkovMixtureModel.exe --predict --model <model> --data <data> --predictions <pred>\n");
+            Console.WriteLine("\tUsage: MarkovMixtureModel.exe -mode:predict -model:<model> -data:<data> -predictions:<pred>\n");
         }
     }
 }

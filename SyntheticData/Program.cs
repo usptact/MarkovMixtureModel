@@ -8,7 +8,7 @@ namespace SyntheticData
     {
         public static void Main(string[] args)
         {
-            int NumPoints = 20000;
+            int NumPoints = 1000;
             int NumClusters = 4;
             int NumStates = 5;
 
