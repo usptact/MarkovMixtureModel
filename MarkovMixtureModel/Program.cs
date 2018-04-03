@@ -51,6 +51,16 @@ namespace MarkovMixtureModel
                 Environment.Exit(1);
             }
 
+            // get model filename
+            string modelFilename = @"";
+            if (cmdInfo.GotOption("model"))
+                modelFilename = cmdInfo.GetValue("model");
+            else
+            {
+                PrintHelpMessage();
+                Environment.Exit(1);
+            }
+
             Reader reader = new Reader(dataFilename);
             reader.Read();
 
@@ -71,6 +81,9 @@ namespace MarkovMixtureModel
             model.ObserveData(data, sizes, K);
             model.InitializeStatesRandomly();
             model.InferPosteriors();
+
+            // save the posteriors
+            model.saveModel(modelFilename);
         }
 
         static void Predict(CommandLineInfo cmdInfo)

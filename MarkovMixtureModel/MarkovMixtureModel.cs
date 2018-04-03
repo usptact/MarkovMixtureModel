@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Linq;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using MicrosoftResearch.Infer;
 using MicrosoftResearch.Infer.Models;
 using MicrosoftResearch.Infer.Maths;
 using MicrosoftResearch.Infer.Distributions;
 using MicrosoftResearch.Infer.Utils;
-using System.Linq;
+
 
 namespace MarkovMixtureModel
 {
@@ -171,6 +174,35 @@ namespace MarkovMixtureModel
         {
             Discrete[] ClusterAssignments = engine.Infer<Discrete[]>(Z);
             return ClusterAssignments;
+        }
+
+        // write posteriors to a file
+        public void saveModel(string modelFilename)
+        {
+            BinaryFormatter serializer = new BinaryFormatter();
+
+            using (FileStream stream = new FileStream(modelFilename, FileMode.Create))
+            {
+                serializer.Serialize(stream, ProbClusterPosterior);
+                serializer.Serialize(stream, CPTTransPosterior);
+                serializer.Serialize(stream, ProbInitPosterior);
+            }
+        }
+
+        // read posteriors file
+        public void readModel(string modelFilename,
+                              out Dirichlet inProbClusterPosterior,
+                              out Dirichlet[][] inCPTTransPosterior,
+                              out Dirichlet[] inProbInitPosterior)
+        {
+            BinaryFormatter serializer = new BinaryFormatter();
+
+            using (FileStream stream = new FileStream(modelFilename, FileMode.Create))
+            {
+                inProbClusterPosterior = (Dirichlet)serializer.Deserialize(stream);
+                inCPTTransPosterior = (Dirichlet[][])serializer.Deserialize(stream);
+                inProbInitPosterior = (Dirichlet[])serializer.Deserialize(stream);
+            }
         }
     }
 }
