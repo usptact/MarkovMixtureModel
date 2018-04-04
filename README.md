@@ -2,6 +2,8 @@ The model can be used to cluster discrete value sequences into a pre-defined num
 
 Each sequence in a cluster is modeled using (a) a vector of initial state probabilities and (b) a transition probability matrix. Globally, the model also learns (c) the proportion of the clusters.
 
+The assumption is that a sequence belongs only to one cluster. The parameters generating a sequence don't change within a sequence (no switching).
+
 ## Usage
 
 1. Prepare a data file or use the synthetic data generator
