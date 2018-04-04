@@ -88,7 +88,7 @@ namespace MarkovMixtureModel
 
         static void Predict(CommandLineInfo cmdInfo)
         {
-            
+            throw new NotImplementedException("The prediction mode is not implemented yet!");
         }
 
         static void PrintHelpMessage()
