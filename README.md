@@ -10,19 +10,7 @@ Each sequence in a cluster is modeled using (a) a vector of initial state probab
 1. Prepare a data file or use the synthetic data generator
 2. Run the modeling binary
 
-### Training
-
-`MarkovMixtureModel.exe -mode:train -data:data.txt -model:model.dat -predictions:predictions.txt`
-
-The model `data.txt` and cluster assignments `predictions.txt` are written after the model is trained.
-
-### Prediction
-
-`MarkovMixtureModel.exe -mode:predict -model:model.dat -data:new_data.dat -predictions:new_predictions.txt`
-
-Given the model `model.dat` and a data file `new_data.dat`, the cluster assignments are written to `new_predictions.txt`.
-
-Note: The number of discrete states must the same as used during the training!
+`MarkovMixtureModel.exe -data:data.txt -clusters:5 -predictions:pred.txt`
 
 ## Data Format
 The data file is a newline-delimited text file where each line represents a sequence. The states of a sequence are integers that are space-delimited.
@@ -32,5 +20,3 @@ The data file is a newline-delimited text file where each line represents a sequ
 <sequence> ::= <state> [<state> .. [..]]
 <state> ::= {0,1,...}
 ```
-
-(Work in progress)
