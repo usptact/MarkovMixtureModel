@@ -11,51 +11,9 @@ namespace MarkovMixtureModel
         static void Main(string[] args)
         {
             var cmdInfo = new CommandLineInfo(args);
+            GetArguments(cmdInfo, out string dataFilename, out int numClusters, out string predFilename);
 
-            // get mode
-            string mode = "";
-            if (cmdInfo.GotOption("mode"))
-                mode = cmdInfo.GetValue("mode");
-            else
-            {
-                PrintHelpMessage();
-                Environment.Exit(1);
-            }
-
-            if (string.Equals(mode, "train"))
-                Train(cmdInfo);                 // train the model
-
-            if (string.Equals(mode, "predict"))
-                Predict(cmdInfo);               // predict cluster assignments
-        }
-
-        static void Train(CommandLineInfo cmdInfo)
-        {
-            // get path to data file
-            string dataFilename = "";
-            if (cmdInfo.GotOption("data"))
-                dataFilename = cmdInfo.GetValue("data");
-            else
-            {
-                PrintHelpMessage();
-                Environment.Exit(1);
-            }
-
-            // get number of clusters
-            int C = -1;
-            if (cmdInfo.GotOption("clusters"))
-                C = Int32.Parse(cmdInfo.GetValue("clusters"));
-            else
-            {
-                PrintHelpMessage();
-                Environment.Exit(1);
-            }
-
-            // get model filename
-            string modelFilename = @"";
-            if (cmdInfo.GotOption("model"))
-                modelFilename = cmdInfo.GetValue("model");
-            else
+            if (dataFilename == "" || numClusters == -1 || predFilename == "")
             {
                 PrintHelpMessage();
                 Environment.Exit(1);
@@ -66,37 +24,58 @@ namespace MarkovMixtureModel
 
             int[][] data = reader.GetData();
             int[] sizes = reader.GetSize();
-            int K = reader.GetNumberOfStates();
+            int numStates = reader.GetNumberOfStates();
 
             // get uniform priors
-            MarkovMixtureModel.GetUniformPriors(C, K,
+            MarkovMixtureModel.GetUniformPriors(numClusters, numStates,
                                                 out Dirichlet ClusterPriorObs,
                                                 out Dirichlet[] ProbInitPriorObs,
                                                 out Dirichlet[][] CPTTransPriorObs);
 
             // do model training
-            MarkovMixtureModel model = new MarkovMixtureModel(C);
+            MarkovMixtureModel model = new MarkovMixtureModel(numClusters);
 
             model.SetPriors(ClusterPriorObs, ProbInitPriorObs, CPTTransPriorObs);
-            model.ObserveData(data, sizes, K);
+            model.ObserveData(data, sizes, numStates);
             model.InitializeStatesRandomly();
             model.InferPosteriors();
 
-            // save the posteriors
-            model.saveModel(modelFilename);
+            Console.WriteLine("\n=== Cluster Assignments ===");
+            Console.WriteLine("Writing to: {0}", predFilename);
+            Vector[] assignments = model.GetClusterAssignments();
+            WriteClusterAssignments(predFilename, assignments);
         }
 
-        static void Predict(CommandLineInfo cmdInfo)
+        public static void GetArguments(CommandLineInfo cmdInfo,
+                                out string dataFilename,
+                                out int numClusters,
+                                out string predFilename)
         {
-            throw new NotImplementedException("The prediction mode is not implemented yet!");
+            dataFilename = @"";
+            if (cmdInfo.GotOption("data"))
+                dataFilename = cmdInfo.GetValue("data");
+
+            numClusters = -1;
+            if (cmdInfo.GotOption("clusters"))
+                numClusters = Int32.Parse(cmdInfo.GetValue("clusters"));
+
+            predFilename = @"";
+            if (cmdInfo.GotOption("predictions"))
+                predFilename = cmdInfo.GetValue("predictions");
         }
 
-        static void PrintHelpMessage()
+        public static void WriteClusterAssignments(string predFilename, Vector[] assignments)
+        {
+            StreamWriter writer = new StreamWriter(predFilename);
+            for (int i = 0; i < assignments.Length; i++)
+                writer.WriteLine(assignments[i]);
+            writer.Close();
+        }
+
+        public static void PrintHelpMessage()
         {
             Console.WriteLine("Training:");
-            Console.WriteLine("\tUsage: MarkovMixtureModel.exe -mode:train -data:<data> -clusters:<int> -model:<model>\n");
-            Console.WriteLine("Prediction:");
-            Console.WriteLine("\tUsage: MarkovMixtureModel.exe -mode:predict -model:<model> -data:<data> -predictions:<pred>\n");
+            Console.WriteLine("\tUsage: MarkovMixtureModel.exe -data:<path> -clusters:<int> -predictions:<path>\n");
         }
     }
 }

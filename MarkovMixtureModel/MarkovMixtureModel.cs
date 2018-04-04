@@ -170,14 +170,18 @@ namespace MarkovMixtureModel
         }
 
         // infer cluster assigments
-        public Discrete[] GetClusterAssignments()
+        public Vector[] GetClusterAssignments()
         {
-            Discrete[] ClusterAssignments = engine.Infer<Discrete[]>(Z);
-            return ClusterAssignments;
+            Discrete[] clustAsgnDist = engine.Infer<Discrete[]>(Z);
+            int numItems = clustAsgnDist.Length;
+            Vector[] assignments = new Vector[numItems];
+            for (int i = 0; i < numItems; i++)
+                assignments[i] = clustAsgnDist[i].GetProbs();
+            return assignments;
         }
 
         // write posteriors to a file
-        public void saveModel(string modelFilename)
+        public void SaveModel(string modelFilename)
         {
             BinaryFormatter serializer = new BinaryFormatter();
 
@@ -190,7 +194,7 @@ namespace MarkovMixtureModel
         }
 
         // read posteriors file
-        public void readModel(string modelFilename,
+        public static void ReadModel(string modelFilename,
                               out Dirichlet inProbClusterPosterior,
                               out Dirichlet[][] inCPTTransPosterior,
                               out Dirichlet[] inProbInitPosterior)
