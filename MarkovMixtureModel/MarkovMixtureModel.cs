@@ -2,11 +2,9 @@
 using System.Linq;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using MicrosoftResearch.Infer;
-using MicrosoftResearch.Infer.Models;
-using MicrosoftResearch.Infer.Maths;
-using MicrosoftResearch.Infer.Distributions;
-using MicrosoftResearch.Infer.Utils;
+using Microsoft.ML.Probabilistic.Distributions;
+using Microsoft.ML.Probabilistic.Math;
+using Microsoft.ML.Probabilistic.Models;
 
 
 namespace MarkovMixtureModel

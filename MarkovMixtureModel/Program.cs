@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.IO;
-using MicrosoftResearch.Infer.Distributions;
-using MicrosoftResearch.Infer.Maths;
+using Microsoft.ML.Probabilistic.Distributions;
+using Microsoft.ML.Probabilistic.Math;
 
 namespace MarkovMixtureModel
 {

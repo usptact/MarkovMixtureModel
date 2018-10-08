@@ -1,6 +1,5 @@
 ﻿using System.IO;
-using MicrosoftResearch.Infer.Distributions;
-using MicrosoftResearch.Infer.Maths;
+using Microsoft.ML.Probabilistic.Distributions;
 
 namespace SyntheticData
 {

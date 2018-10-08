@@ -21,3 +21,5 @@ The data file is a newline-delimited text file where each line represents a sequ
 <sequence> ::= <state> [<state> .. [..]]
 <state> ::= {0,1,...}
 ```
+
+Updated to use open source Infer.NET
